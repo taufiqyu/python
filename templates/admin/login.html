@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-6">
+    <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-200 w-full max-w-md">
+        <h1 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Admin Login</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-lg bg-white border border-gray-200 text-sm {% if category == 'success' %}text-teal-600{% elif category == 'error' %}text-red-600{% else %}text-teal-600{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('admin_login') }}">
+            {{ form.hidden_tag() }}
+            <div class="mb-4">
+                <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-600 mb-2">
+                    {{ form.username.label.text }}
+                </label>
+                {{ form.username(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Masukkan username...") }}
+                {% for error in form.username.errors %}
+                    <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-6">
+                <label for="{{ form.password.id }}" class="block text-sm font-medium text-gray-600 mb-2">
+                    {{ form.password.label.text }}
+                </label>
+                {{ form.password(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Masukkan password...") }}
+                {% for error in form.password.errors %}
+                    <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <button type="submit" class="w-full bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                Login
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

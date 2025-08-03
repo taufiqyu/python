@@ -1,0 +1,376 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header Card -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-gray-800 mb-2">Dashboard Superadmin</h1>
+                        <p class="text-sm text-gray-600">Kelola admin, tema, dan kategori undangan</p>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                        Logout
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-8 space-y-2">
+                        {% for category, message in messages %}
+                            <div class="p-4 rounded-lg bg-white border border-gray-200 text-sm {% if category == 'success' %}text-teal-600{% elif category == 'error' %}text-red-600{% else %}text-teal-600{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Main Content Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <!-- Navigation Dropdown -->
+                <div class="p-6 border-b border-gray-200">
+                    <label for="tab-select" class="block text-sm font-medium text-gray-600 mb-2">Navigasi Menu</label>
+                    <select id="tab-select" onchange="showTab(this.value)" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all bg-white text-gray-800 font-medium">
+                        <option value="admin" selected>Manajemen Admin</option>
+                        <option value="tema">Manajemen Tema</option>
+                        <option value="kategori">Manajemen Kategori</option>
+                    </select>
+                </div>
+
+                <!-- Content Area -->
+                <div class="p-6">
+                    <!-- Admin Tab -->
+                    <div id="admin" class="tab-content block">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Manajemen Admin</h2>
+
+                        <!-- Edit Superadmin Form -->
+                        <div class="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Edit Akun Superadmin</h3>
+                            <form method="POST" action="{{ url_for('edit_superadmin') }}">
+                                {{ superadmin_form.hidden_tag() }}
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="{{ superadmin_form.username.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ superadmin_form.username.label.text }}</label>
+                                        {{ superadmin_form.username(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Username Superadmin") }}
+                                        {% for error in superadmin_form.username.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ superadmin_form.password.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ superadmin_form.password.label.text }}</label>
+                                        {{ superadmin_form.password(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Kosongkan jika tidak ingin mengubah") }}
+                                        {% for error in superadmin_form.password.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {{ superadmin_form.submit(class="w-full bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium") }}
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Add New Admin Button -->
+                        <div class="mb-6">
+                            <a href="{{ url_for('create_admin') }}" class="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                                Tambah Admin Baru
+                            </a>
+                        </div>
+
+                        <!-- Admin Table -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-teal-700 text-white">
+                                        <tr>
+                                            <th class="p-4 text-left font-medium">Username</th>
+                                            <th class="p-4 text-left font-medium">Slug Undangan</th>
+                                            <th class="p-4 text-left font-medium">Tema</th>
+                                            <th class="p-4 text-left font-medium">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for admin in admins %}
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-4 font-medium text-gray-800">{{ admin.username|e }}</td>
+                                            <td class="p-4 text-gray-600">{{ admin.undangan.slug if admin.undangan else '-' }}</td>
+                                            <td class="p-4 text-gray-600">{{ admin.undangan.tema.nama if admin.undangan and admin.undangan.tema else '-' }}</td>
+                                            <td class="p-4">
+                                                <div class="flex gap-2">
+                                                    <button onclick="showEditAdminModal({{ admin.id }}, '{{ admin.username|e }}', '{{ admin.undangan.slug if admin.undangan else '' }}', {{ admin.undangan.tema_id if admin.undangan else 0 }})" class="bg-teal-700 text-white p-2 rounded-lg hover:bg-teal-800 hover:scale-110 transition-all duration-200" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <a href="{{ url_for('delete_admin', admin_id=admin.id) }}" onclick="return confirm('Yakin ingin menghapus admin ini?')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-gray-600">
+                                                <p class="text-lg font-medium">Belum ada admin</p>
+                                                <p class="text-sm">Tambahkan admin baru di atas</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tema Tab -->
+                    <div id="tema" class="tab-content hidden">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Manajemen Tema</h2>
+                        <div class="mb-6">
+                            <a href="{{ url_for('create_tema') }}" class="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                                Tambah Tema Baru
+                            </a>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-teal-700 text-white">
+                                        <tr>
+                                            <th class="p-4 text-left font-medium">Nama Tema</th>
+                                            <th class="p-4 text-left font-medium">Template</th>
+                                            <th class="p-4 text-left font-medium">Kategori</th>
+                                            <th class="p-4 text-left font-medium">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for tema in temas %}
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-4 font-medium text-gray-800">{{ tema.nama|e }}</td>
+                                            <td class="p-4 text-gray-600">{{ tema.template_name|e }}</td>
+                                            <td class="p-4 text-gray-600">{{ tema.category.name if tema.category else '-' }}</td>
+                                            <td class="p-4">
+                                                <div class="flex gap-2">
+                                                    <a href="{{ url_for('edit_tema', tema_id=tema.id) }}" class="bg-teal-700 text-white p-2 rounded-lg hover:bg-teal-800 hover:scale-110 transition-all duration-200" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('delete_tema', tema_id=tema.id) }}" onclick="return confirm('Yakin ingin menghapus tema ini?')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-gray-600">
+                                                <p class="text-lg font-medium">Belum ada tema</p>
+                                                <p class="text-sm">Tambahkan tema baru di atas</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kategori Tab -->
+                    <div id="kategori" class="tab-content hidden">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Manajemen Kategori</h2>
+                        <div class="mb-6">
+                            <a href="{{ url_for('create_category') }}" class="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                                Tambah Kategori Baru
+                            </a>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-teal-700 text-white">
+                                        <tr>
+                                            <th class="p-4 text-left font-medium">Nama Kategori</th>
+                                            <th class="p-4 text-left font-medium">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for category in categories %}
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-4 font-medium text-gray-800">{{ category.name|e }}</td>
+                                            <td class="p-4">
+                                                <div class="flex gap-2">
+                                                    <button onclick="showEditCategoryModal({{ category.id }}, '{{ category.name|e }}')" class="bg-teal-700 text-white p-2 rounded-lg hover:bg-teal-800 hover:scale-110 transition-all duration-200" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <a href="{{ url_for('delete_category', category_id=category.id) }}" onclick="return confirm('Yakin ingin menghapus kategori ini?')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="2" class="p-8 text-center text-gray-600">
+                                                <p class="text-lg font-medium">Belum ada kategori</p>
+                                                <p class="text-sm">Tambahkan kategori baru di atas</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div id="editAdminModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 w-full max-w-md mx-4 transform scale-95 opacity-0 transition-all duration-300" id="modalContentAdmin">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Edit Admin</h2>
+        <form method="POST" action="" id="editAdminForm">
+            {{ form.hidden_tag() }}
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form.username.label.text }}</label>
+                    {{ form.username(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Username") }}
+                    {% for error in form.username.errors %}
+                        <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div>
+                    <label for="{{ form.password.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form.password.label.text }}</label>
+                    {{ form.password(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Kosongkan jika tidak ingin mengubah") }}
+                    {% for error in form.password.errors %}
+                        <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div>
+                    <label for="{{ form.slug.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form.slug.label.text }}</label>
+                    {{ form.slug(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Slug Undangan") }}
+                    {% for error in form.slug.errors %}
+                        <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div>
+                    <label for="{{ form.tema_id.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form.tema_id.label.text }}</label>
+                    {{ form.tema_id(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all") }}
+                    {% for error in form.tema_id.errors %}
+                        <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeEditAdminModal()" class="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-all font-medium">
+                    Batal
+                </button>
+                {{ form.submit(class="flex-1 bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 transition-all font-medium") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 w-full max-w-md mx-4 transform scale-95 opacity-0 transition-all duration-300" id="modalContentCategory">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Edit Kategori</h2>
+        <form method="POST" action="" id="editCategoryForm">
+            {{ category_form.hidden_tag() }}
+            <div class="mb-6">
+                <label for="{{ category_form.name.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ category_form.name.label.text }}</label>
+                {{ category_form.name(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Nama Kategori") }}
+                {% for error in category_form.name.errors %}
+                    <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeEditCategoryModal()" class="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-all font-medium">
+                    Batal
+                </button>
+                {{ category_form.submit(class="flex-1 bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 transition-all font-medium") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+        tab.classList.remove('block');
+    });
+    document.getElementById(tabId).classList.remove('hidden');
+    document.getElementById(tabId).classList.add('block');
+}
+
+function showEditAdminModal(adminId, username, slug, temaId) {
+    const modal = document.getElementById('editAdminModal');
+    const modalContent = document.getElementById('modalContentAdmin');
+    const form = document.getElementById('editAdminForm');
+    
+    form.action = `/admin/superadmin/edit/${adminId}`;
+    form.querySelector('input[name="username"]').value = username;
+    form.querySelector('input[name="slug"]').value = slug;
+    form.querySelector('select[name="tema_id"]').value = temaId;
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeEditAdminModal() {
+    const modal = document.getElementById('editAdminModal');
+    const modalContent = document.getElementById('modalContentAdmin');
+    
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function showEditCategoryModal(categoryId, categoryName) {
+    const modal = document.getElementById('editCategoryModal');
+    const modalContent = document.getElementById('modalContentCategory');
+    const form = document.getElementById('editCategoryForm');
+    
+    form.action = `/admin/category/edit/${categoryId}`;
+    form.querySelector('input[name="name"]').value = categoryName;
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeEditCategoryModal() {
+    const modal = document.getElementById('editCategoryModal');
+    const modalContent = document.getElementById('modalContentCategory');
+    
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    showTab('admin');
+    document.documentElement.style.scrollBehavior = 'smooth';
+    document.getElementById('editAdminModal').addEventListener('click', (e) => {
+        if (e.target.id === 'editAdminModal') {
+            closeEditAdminModal();
+        }
+    });
+    document.getElementById('editCategoryModal').addEventListener('click', (e) => {
+        if (e.target.id === 'editCategoryModal') {
+            closeEditCategoryModal();
+        }
+    });
+});
+</script>
+{% endblock %}

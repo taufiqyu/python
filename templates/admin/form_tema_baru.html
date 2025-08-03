@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-8">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h1 class="text-2xl font-semibold text-teal-800 mb-6">{{ 'Tambah Tema Baru' if not tema else 'Edit Tema' }}</h1>
+        <a href="{{ url_for('superadmin') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md mb-6 inline-flex items-center hover:bg-gray-600 transition">
+            <i class="fas fa-arrow-left mr-2"></i>Kembali
+        </a>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+            <div class="p-4 rounded-md {% if category == 'success' %}bg-teal-50 text-teal-800 border border-teal-200{% elif category == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="mb-5">
+                    <label for="{{ form.nama.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.nama.label.text }}
+                    </label>
+                    {{ form.nama(class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-500 transition", placeholder="Nama Tema") }}
+                    {% for error in form.nama.errors %}
+                        <span class="text-red-500 text-sm">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="mb-5">
+                    <label for="{{ form.template_name.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.template_name.label.text }}
+                    </label>
+                    {{ form.template_name(class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-500 transition", placeholder="Nama Template") }}
+                    {% for error in form.template_name.errors %}
+                        <span class="text-red-500 text-sm">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="mb-5">
+                    <label for="{{ form.description.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.description.label.text }}
+                    </label>
+                    {{ form.description(class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-500 transition", placeholder="Deskripsi Tema") }}
+                    {% for error in form.description.errors %}
+                        <span class="text-red-500 text-sm">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="mb-5">
+                    <label for="{{ form.category_id.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.category_id.label.text }}
+                    </label>
+                    {{ form.category_id(class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-500 transition") }}
+                    {% for error in form.category_id.errors %}
+                        <span class="text-red-500 text-sm">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="mb-5">
+                    <label for="{{ form.image_url.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.image_url.label.text }}
+                    </label>
+                    {{ form.image_url(class="w-full p-3 border border-gray-300 rounded-md file:border-0 file:bg-teal-50 file:text-teal-800 file:rounded-md file:px-3 file:py-2") }}
+                    <p class="text-sm text-gray-600 mt-1">Pilih file gambar untuk tema (kosongkan untuk mempertahankan gambar saat ini).</p>
+                    {% if tema and tema.image_url %}
+                    <img src="{{ url_for('static', filename=tema.image_url) }}" alt="Gambar Tema" class="w-24 h-24 object-cover rounded-md mt-2">
+                    {% endif %}
+                    {% for error in form.image_url.errors %}
+                        <span class="text-red-500 text-sm">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="w-full bg-teal-500 text-white px-4 py-3 rounded-md hover:bg-teal-600 transition inline-flex items-center justify-center">
+                <i class="fas fa-save mr-2"></i>{{ 'Simpan Tema' if not tema else 'Update Tema' }}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

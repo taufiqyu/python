@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-cover bg-center font-serif" style="background-image: url('{{ url_for('static', filename=undangan.bg_undangan) if undangan.bg_undangan else url_for('static', filename='images/default-bg.jpg') }}')">
+    <div class="bg-navy-900 bg-opacity-60 min-h-screen flex flex-col items-center justify-center">
+        <!-- Cover Section -->
+        <section class="w-full max-w-5xl text-center text-ivory py-16 animate-fade-in">
+            {% if undangan.bg_sampul %}
+            <img src="{{ url_for('static', filename=undangan.bg_sampul) }}" alt="Cover" class="w-full h-80 object-cover mb-6 rounded-lg shadow-lg">
+            {% endif %}
+            <h1 class="text-5xl font-bold text-gold-400 tracking-wide">{{ undangan.nama_mempelai|e }}</h1>
+            <p class="text-2xl mt-4 text-ivory">We cordially invite you to our wedding celebration</p>
+            {% if undangan.audio %}
+            <audio controls autoplay loop class="mt-6 mx-auto rounded-full p-2 bg-gold-400">
+                <source src="{{ url_for('static', filename=undangan.audio) }}" type="audio/mpeg">
+            </audio>
+            {% endif %}
+        </section>
+
+        <!-- Mempelai Section -->
+        <section class="w-full max-w-5xl bg-ivory bg-opacity-95 p-8 my-8 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-semibold mb-6 text-center text-navy-900">The Couple</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="text-center">
+                    {% if undangan.foto_pria %}
+                    <img src="{{ url_for('static', filename=undangan.foto_pria) }}" alt="{{ undangan.mempelai_pria|e }}" class="w-40 h-40 object-cover rounded-full mx-auto mb-4 border-4 border-gold-400">
+                    {% endif %}
+                    <h3 class="text-2xl font-bold text-navy-900">{{ undangan.mempelai_pria|e }}</h3>
+                    <p class="text-gray-700">{{ undangan.bio_pria|e if undangan.bio_pria else '-' }}</p>
+                    <p class="text-gray-600">Father: {{ undangan.ayah_pria|e if undangan.ayah_pria else '-' }}</p>
+                    <p class="text-gray-600">Mother: {{ undangan.ibu_pria|e if undangan.ibu_pria else '-' }}</p>
+                    {% if undangan.instagram_pria %}
+                    <a href="{{ undangan.instagram_pria|e }}" class="text-gold-400 hover:text-gold-600"><i class="fab fa-instagram mr-2"></i>Instagram</a>
+                    {% endif %}
+                </div>
+                <div class="text-center">
+                    {% if undangan.foto_wanita %}
+                    <img src="{{ url_for('static', filename=undangan.foto_wanita) }}" alt="{{ undangan.mempelai_wanita|e }}" class="w-40 h-40 object-cover rounded-full mx-auto mb-4 border-4 border-gold-400">
+                    {% endif %}
+                    <h3 class="text-2xl font-bold text-navy-900">{{ undangan.mempelai_wanita|e }}</h3>
+                    <p class="text-gray-700">{{ undangan.bio_wanita|e if undangan.bio_wanita else '-' }}</p>
+                    <p class="text-gray-600">Father: {{ undangan.ayah_wanita|e if undangan.ayah_wanita else '-' }}</p>
+                    <p class="text-gray-600">Mother: {{ undangan.ibu_wanita|e if undangan.ibu_wanita else '-' }}</p>
+                    {% if undangan.instagram_wanita %}
+                    <a href="{{ undangan.instagram_wanita|e }}" class="text-gold-400 hover:text-gold-600"><i class="fab fa-instagram mr-2"></i>Instagram</a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Acara Section -->
+        <section class="w-full max-w-5xl bg-ivory bg-opacity-95 p-8 my-8 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-semibold mb-6 text-center text-navy-900">Events</h2>
+            {% if undangan.tanggal_akad %}
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-navy-900">Akad Nikah</h3>
+                <p class="text-gray-700">{{ undangan.tanggal_akad.strftime('%d %B %Y %H:%M') }}</p>
+                <p class="text-gray-600">{{ undangan.tempat_akad|e if undangan.tempat_akad else '-' }}</p>
+                <p class="text-gray-600">{{ undangan.lokasi_akad|e if undangan.lokasi_akad else '-' }}</p>
+                {% if undangan.maps_akad %}
+                <a href="{{ undangan.maps_akad|e }}" class="text-gold-400 hover:text-gold-600"><i class="fas fa-map-marker-alt mr-2"></i>View Map</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if undangan.tanggal_resepsi %}
+            <div>
+                <h3 class="text-2xl font-bold text-navy-900">Reception</h3>
+                <p class="text-gray-700">{{ undangan.tanggal_resepsi.strftime('%d %B %Y %H:%M') }}</p>
+                <p class="text-gray-600">{{ undangan.tempat_resepsi|e if undangan.tempat_resepsi else '-' }}</p>
+                <p class="text-gray-600">{{ undangan.lokasi_resepsi|e if undangan.lokasi_resepsi else '-' }}</p>
+                {% if undangan.maps_resepsi %}
+                <a href="{{ undangan.maps_resepsi|e }}" class="text-gold-400 hover:text-gold-600"><i class="fas fa-map-marker-alt mr-2"></i>View Map</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Galeri Section -->
+        <section class="w-full max-w-5xl bg-ivory bg-opacity-95 p-8 my-8 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-semibold mb-6 text-center text-navy-900">Gallery</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {% for galeri in galeri_list %}
+                <img src="{{ url_for('static', filename=galeri.url) }}" alt="{{ galeri.alt|e if galeri.alt else 'Photo' }}" class="w-full h-48 object-cover rounded-lg shadow-md hover:scale-105 transition-transform">
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Cerita Section -->
+        <section class="w-full max-w-5xl bg-ivory bg-opacity-95 p-8 my-8 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-semibold mb-6 text-center text-navy-900">Our Story</h2>
+            {% for cerita in cerita_list %}
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-navy-900">{{ cerita.judul|e }}</h3>
+                <p class="text-gray-600">{{ cerita.tanggal.strftime('%d %B %Y') if cerita.tanggal else '-' }}</p>
+                <p class="text-gray-700">{{ cerita.isi|e }}</p>
+            </div>
+            {% endfor %}
+        </section>
+
+        <!-- RSVP Section -->
+        <section class="w-full max-w-5xl bg-ivory bg-opacity-95 p-8 my-8 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-semibold mb-6 text-center text-navy-900">RSVP</h2>
+            <p class="text-center mb-4 text-gray-700">To: {{ tamu.nama|e }}</p>
+            {% if tamu.rsvp_status %}
+            <p class="text-center text-gray-700">Status: {{ tamu.rsvp_status|e }}</p>
+            {% if tamu.ucapan %}
+            <p class="text-center text-gray-700">Message: {{ tamu.ucapan|e }}</p>
+            {% endif %}
+            {% else %}
+            <form method="POST" class="max-w-md mx-auto">
+                {{ form.hidden_tag() }}
+                <div class="mb-4">
+                    {{ form.rsvp_status.label(class="block text-navy-900 font-semibold") }}
+                    {{ form.rsvp_status(class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-400") }}
+                </div>
+                <div class="mb-4">
+                    {{ form.ucapan.label(class="block text-navy-900 font-semibold") }}
+                    {{ form.ucapan(class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-400") }}
+                </div>
+                <button type="submit" class="bg-gold-400 text-navy-900 px-6 py-3 rounded-lg hover:bg-gold-500 transition-colors">Submit RSVP</button>
+            </form>
+            {% endif %}
+        </section>
+
+        <!-- Rekening Section -->
+        <section class="w-full max-w-5xl bg-ivory bg-opacity-95 p-8 my-8 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-semibold mb-6 text-center text-navy-900">Gifts</h2>
+            {% if undangan.penerima_kado or undangan.alamat_kado %}
+            <p class="text-gray-700">Recipient: {{ undangan.penerima_kado|e if undangan.penerima_kado else '-' }}</p>
+            <p class="text-gray-700">Address: {{ undangan.alamat_kado|e if undangan.alamat_kado else '-' }}</p>
+            {% endif %}
+            {% for rekening in rekening_list %}
+            <div class="mb-4">
+                <p class="text-gray-700">Bank: {{ rekening.nama_bank|e }}</p>
+                <p class="text-gray-700">Account Number: {{ rekening.nomer_rekening|e }}</p>
+                <p class="text-gray-700">Account Holder: {{ rekening.atas_nama|e }}</p>
+            </div>
+            {% endfor %}
+        </section>
+    </div>
+</div>
+{% endblock %}

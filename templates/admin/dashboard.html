@@ -1,0 +1,531 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header Card -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-gray-800 mb-2">Dashboard Admin</h1>
+                        <div class="flex flex-col sm:flex-row gap-2 text-sm text-gray-600">
+                            <span class="bg-gray-100 px-3 py-1 rounded-full font-medium">{{ undangan.slug|e }}</span>
+                            <span class="bg-gray-100 px-3 py-1 rounded-full font-medium">Tema: {{ undangan.tema.nama|e }}</span>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-lg bg-white border border-gray-200 text-sm {% if category == 'success' %}text-teal-600{% elif category == 'error' %}text-red-600{% else %}text-teal-600{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+            <!-- Statistik Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Total Tamu</h2>
+                    <p class="text-2xl font-semibold text-gray-800">{{ total_tamu }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Hadir</h2>
+                    <p class="text-2xl font-semibold text-teal-700">{{ hadir }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Tidak Hadir</h2>
+                    <p class="text-2xl font-semibold text-red-600">{{ tidak_hadir }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Masih Ragu</h2>
+                    <p class="text-2xl font-semibold text-gray-600">{{ masih_ragu }}</p>
+                </div>
+            </div>
+
+            <!-- Main Content Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <!-- Navigation Dropdown -->
+                <div class="p-6 border-b border-gray-200">
+                    <label for="tab-select" class="block text-sm font-medium text-gray-600 mb-2">Navigasi Menu</label>
+                    <select id="tab-select" onchange="showTab(this.value)" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all bg-white text-gray-800 font-medium">
+                        <option value="tamu" {% if default_tab == 'tamu' %}selected{% endif %}>Manajemen Tamu</option>
+                        <option value="ucapan" {% if default_tab == 'ucapan' %}selected{% endif %}>Daftar Ucapan</option>
+                        <option value="data-undangan" {% if default_tab == 'data-undangan' %}selected{% endif %}>Data Undangan</option>
+                    </select>
+                </div>
+
+                <!-- Content Area -->
+                <div class="p-6">
+                    <!-- Tamu Tab -->
+                    <div id="tamu" class="tab-content {% if default_tab == 'tamu' %}block{% else %}hidden{% endif %}">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Manajemen Tamu</h2>
+                        
+                        <!-- Add Guest Form -->
+                        <div class="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Tambah Tamu Baru</h3>
+                            <form method="POST" action="{{ url_for('tambah_tamu') }}" enctype="multipart/form-data">
+                                {{ form_tamu.hidden_tag() }}
+                                <div class="flex flex-col sm:flex-row gap-4">
+                                    <div class="flex-1">
+                                        {{ form_tamu.nama(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Masukkan nama tamu...") }}
+                                        {% for error in form_tamu.nama.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {{ form_tamu.submit(class="bg-teal-700 text-white px-6 py-3 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium") }}
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Export Button -->
+                        <div class="mb-6">
+                            <a href="{{ url_for('export_tamu') }}" class="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                                Ekspor ke Excel
+                            </a>
+                        </div>
+
+                        <!-- Guest Table -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-teal-700 text-white">
+                                        <tr>
+                                            <th class="p-4 text-left font-medium">Nama Tamu</th>
+                                            <th class="p-4 text-left font-medium">Status RSVP</th>
+                                            <th class="p-4 text-left font-medium">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for tamu in tamu_list %}
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-4 font-medium text-gray-800">{{ tamu.nama|e }}</td>
+                                            <td class="p-4">
+                                                {% if tamu.rsvp_status == 'Hadir' %}
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
+                                                    {{ tamu.rsvp_status|e }}
+                                                </span>
+                                                {% elif tamu.rsvp_status == 'Tidak Hadir' %}
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
+                                                    {{ tamu.rsvp_status|e }}
+                                                </span>
+                                                {% elif tamu.rsvp_status == 'Masih Ragu' %}
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                                    {{ tamu.rsvp_status|e }}
+                                                </span>
+                                                {% else %}
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                                    Belum Konfirmasi
+                                                </span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="p-4">
+                                                <div class="flex gap-2">
+                                                    <button onclick="showEditTamuModal({{ tamu.id }}, '{{ tamu.nama|e }}')" class="bg-teal-700 text-white p-2 rounded-lg hover:bg-teal-800 hover:scale-110 transition-all duration-200" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button onclick="copyLink('{{ url_for('undangan', slug=undangan.slug, kode=tamu.kode, _external=True) }}')" class="bg-teal-700 text-white p-2 rounded-lg hover:bg-teal-800 hover:scale-110 transition-all duration-200" title="Salin Link">
+                                                        <i class="fas fa-link"></i>
+                                                    </button>
+                                                    <a href="{{ url_for('delete_tamu', tamu_id=tamu.id) }}" onclick="return confirm('Yakin ingin menghapus tamu ini?')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="3" class="p-8 text-center text-gray-600">
+                                                <p class="text-lg font-medium">Belum ada tamu yang ditambahkan</p>
+                                                <p class="text-sm">Tambahkan tamu pertama Anda di atas</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ucapan Tab -->
+                    <div id="ucapan" class="tab-content {% if default_tab == 'ucapan' %}block{% else %}hidden{% endif %}">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Daftar Ucapan</h2>
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-teal-700 text-white">
+                                        <tr>
+                                            <th class="p-4 text-left font-medium">Nama</th>
+                                            <th class="p-4 text-left font-medium">Ucapan</th>
+                                            <th class="p-4 text-left font-medium">Waktu</th>
+                                            <th class="p-4 text-left font-medium">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for tamu in tamu_list if tamu.ucapan %}
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-4 font-medium text-gray-800">{{ tamu.nama|e }}</td>
+                                            <td class="p-4 text-gray-600">{{ tamu.ucapan|e }}</td>
+                                            <td class="p-4 text-sm text-gray-600">{{ tamu.waktu_rsvp.strftime('%d/%m/%Y %H:%M') if tamu.waktu_rsvp else '-' }}</td>
+                                            <td class="p-4">
+                                                <a href="{{ url_for('delete_ucapan', tamu_id=tamu.id) }}" onclick="return confirm('Yakin ingin menghapus ucapan ini?')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-gray-600">
+                                                <p class="text-lg font-medium">Belum ada ucapan</p>
+                                                <p class="text-sm">Ucapan akan muncul setelah tamu mengisi RSVP</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Undangan Tab -->
+                    <div id="data-undangan" class="tab-content {% if default_tab == 'data-undangan' %}block{% else %}hidden{% endif %}">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Undangan</h2>
+
+                        <!-- Sub Navigation -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+                            <label for="subtab-select" class="block text-sm font-medium text-gray-600 mb-2">Pilih Kategori</label>
+                            <select id="subtab-select" onchange="showSubTab(this.value)" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all bg-white text-gray-800 font-medium">
+                                <option value="undangan-detail" selected>Detail Undangan</option>
+                                <option value="galeri">Galeri Foto</option>
+                                <option value="rekening">Info Rekening</option>
+                                <option value="cerita">Cerita Cinta</option>
+                            </select>
+                        </div>
+
+                        <!-- Detail Undangan Subtab -->
+                        <div id="undangan-detail" class="subtab-content block">
+                            <h3 class="text-lg font-medium text-gray-800 mb-6">Detail Undangan</h3>
+                            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                                {{ form.hidden_tag() }}
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {% for field in form if field.name not in ['csrf_token', 'submit'] %}
+                                    <div class="space-y-2">
+                                        <label for="{{ field.id }}" class="block text-sm font-medium text-gray-600">
+                                            {{ field.label.text }}
+                                        </label>
+                                        {% if field.type == 'TextAreaField' %}
+                                            {{ field(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all h-32", placeholder=field.label.text) }}
+                                        {% elif field.type == 'FileField' %}
+                                            {{ field(class="w-full p-3 border border-gray-200 rounded-lg file:border-0 file:bg-gray-100 file:text-gray-800 file:rounded-lg file:px-3 file:py-2 file:font-medium") }}
+                                            {% if getattr(undangan, field.name) %}
+                                                {% if field.name == 'audio' %}
+                                                    <audio controls class="mt-2 w-full">
+                                                        <source src="{{ url_for('static', filename=getattr(undangan, field.name)) }}" type="audio/mpeg">
+                                                    </audio>
+                                                {% else %}
+                                                    <img src="{{ url_for('static', filename=getattr(undangan, field.name)) }}" alt="{{ field.label.text }}" class="w-24 h-24 object-cover rounded-lg mt-2">
+                                                {% endif %}
+                                            {% endif %}
+                                        {% elif field.type == 'DateTimeLocalField' %}
+                                            {{ field(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all") }}
+                                            <p class="text-sm text-gray-600 mt-1">Format: YYYY-MM-DD HH:MM (contoh: 2025-12-25 10:00)</p>
+                                        {% else %}
+                                            {{ field(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder=field.label.text) }}
+                                        {% endif %}
+                                        {% for error in field.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <button type="submit" class="w-full bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium">
+                                    Simpan Perubahan
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Galeri Subtab -->
+                        <div id="galeri" class="subtab-content hidden">
+                            <h3 class="text-lg font-medium text-gray-800 mb-6">Galeri Foto</h3>
+                            <form method="POST" action="{{ url_for('tambah_galeri') }}" enctype="multipart/form-data" class="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+                                {{ form_galeri.hidden_tag() }}
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="{{ form_galeri.url.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_galeri.url.label.text }}</label>
+                                        {{ form_galeri.url(class="w-full p-3 border border-gray-200 rounded-lg file:border-0 file:bg-gray-100 file:text-gray-800 file:rounded-lg file:px-3 file:py-2 file:font-medium") }}
+                                        {% for error in form_galeri.url.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ form_galeri.alt.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_galeri.alt.label.text }}</label>
+                                        {{ form_galeri.alt(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Deskripsi foto (opsional)") }}
+                                        {% for error in form_galeri.alt.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {{ form_galeri.submit(class="w-full bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium") }}
+                                </div>
+                            </form>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {% for galeri in galeri_list %}
+                                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                                    <img src="{{ url_for('static', filename=galeri.url) }}" alt="{{ galeri.alt or 'Foto' }}" class="w-full h-40 object-cover rounded-lg mb-2">
+                                    <p class="text-sm text-gray-600">{{ galeri.alt or 'Tanpa deskripsi' }}</p>
+                                    <a href="{{ url_for('delete_galeri', galeri_id=galeri.id) }}" onclick="return confirm('Yakin ingin menghapus foto ini?')" class="inline-block bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200 mt-2">
+                                        Hapus
+                                    </a>
+                                </div>
+                                {% else %}
+                                <p class="text-gray-600 text-center col-span-full">Belum ada foto di galeri.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Rekening Subtab -->
+                        <div id="rekening" class="subtab-content hidden">
+                            <h3 class="text-lg font-medium text-gray-800 mb-6">Info Rekening</h3>
+                            <form method="POST" action="{{ url_for('tambah_rekening') }}" class="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+                                {{ form_rekening.hidden_tag() }}
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div>
+                                        <label for="{{ form_rekening.nama_bank.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_rekening.nama_bank.label.text }}</label>
+                                        {{ form_rekening.nama_bank(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Nama Bank") }}
+                                        {% for error in form_rekening.nama_bank.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ form_rekening.nomer_rekening.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_rekening.nomer_rekening.label.text }}</label>
+                                        {{ form_rekening.nomer_rekening(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Nomor Rekening") }}
+                                        {% for error in form_rekening.nomer_rekening.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ form_rekening.atas_nama.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_rekening.atas_nama.label.text }}</label>
+                                        {{ form_rekening.atas_nama(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Atas Nama") }}
+                                        {% for error in form_rekening.atas_nama.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {{ form_rekening.submit(class="w-full bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium mt-4") }}
+                            </form>
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                                <table class="w-full">
+                                    <thead class="bg-teal-700 text-white">
+                                        <tr>
+                                            <th class="p-4 text-left font-medium">Nama Bank</th>
+                                            <th class="p-4 text-left font-medium">Nomor Rekening</th>
+                                            <th class="p-4 text-left font-medium">Atas Nama</th>
+                                            <th class="p-4 text-left font-medium">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for rekening in rekening_list %}
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-4 font-medium text-gray-800">{{ rekening.nama_bank|e }}</td>
+                                            <td class="p-4 text-gray-600">{{ rekening.nomer_rekening|e }}</td>
+                                            <td class="p-4 text-gray-600">{{ rekening.atas_nama|e }}</td>
+                                            <td class="p-4">
+                                                <a href="{{ url_for('delete_rekening', rekening_id=rekening.id) }}" onclick="return confirm('Yakin ingin menghapus rekening ini?')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-gray-600">
+                                                <p class="text-lg font-medium">Belum ada rekening</p>
+                                                <p class="text-sm">Tambahkan rekening di atas</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Cerita Subtab -->
+                        <div id="cerita" class="subtab-content hidden">
+                            <h3 class="text-lg font-medium text-gray-800 mb-6">Cerita Cinta</h3>
+                            <form method="POST" action="{{ url_for('tambah_cerita') }}" class="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+                                {{ form_cerita.hidden_tag() }}
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="{{ form_cerita.judul.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_cerita.judul.label.text }}</label>
+                                        {{ form_cerita.judul(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Judul Cerita") }}
+                                        {% for error in form_cerita.judul.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ form_cerita.tanggal.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_cerita.tanggal.label.text }}</label>
+                                        {{ form_cerita.tanggal(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="YYYY-MM-DD HH:MM") }}
+                                        <p class="text-sm text-gray-600 mt-1">Format: YYYY-MM-DD HH:MM (contoh: 2025-12-25 10:00)</p>
+                                        {% for error in form_cerita.tanggal.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="lg:col-span-2">
+                                        <label for="{{ form_cerita.isi.id }}" class="block text-sm font-medium text-gray-600 mb-2">{{ form_cerita.isi.label.text }}</label>
+                                        {{ form_cerita.isi(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all h-32", placeholder="Isi Cerita") }}
+                                        {% for error in form_cerita.isi.errors %}
+                                            <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {{ form_cerita.submit(class="w-full bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 hover:scale-105 transition-all duration-200 font-medium mt-4") }}
+                            </form>
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                                <table class="w-full">
+                                    <thead class="bg-teal-700 text-white">
+                                        <tr>
+                                            <th class="p-4 text-left font-medium">Judul</th>
+                                            <th class="p-4 text-left font-medium">Tanggal</th>
+                                            <th class="p-4 text-left font-medium">Isi</th>
+                                            <th class="p-4 text-left font-medium">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for cerita in cerita_list %}
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-4 font-medium text-gray-800">{{ cerita.judul|e }}</td>
+                                            <td class="p-4 text-sm text-gray-600">{{ cerita.tanggal.strftime('%d/%m/%Y %H:%M') if cerita.tanggal else '-' }}</td>
+                                            <td class="p-4 text-gray-600">{{ cerita.isi|e }}</td>
+                                            <td class="p-4">
+                                                <a href="{{ url_for('delete_cerita', cerita_id=cerita.id) }}" onclick="return confirm('Yakin ingin menghapus cerita ini?')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 hover:scale-110 transition-all duration-200" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-gray-600">
+                                                <p class="text-lg font-medium">Belum ada cerita</p>
+                                                <p class="text-sm">Tambahkan cerita di atas</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Tamu Modal -->
+<div id="editTamuModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 w-full max-w-md mx-4 transform scale-95 opacity-0 transition-all duration-300" id="modalContent">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Edit Tamu</h2>
+        <form method="POST" action="" id="editTamuForm">
+            {{ form_tamu.hidden_tag() }}
+            <div class="mb-6">
+                <label for="{{ form_tamu.nama.id }}" class="block text-sm font-medium text-gray-600 mb-2">
+                    {{ form_tamu.nama.label.text }}
+                </label>
+                {{ form_tamu.nama(class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all", placeholder="Nama Tamu") }}
+                {% for error in form_tamu.nama.errors %}
+                    <span class="text-red-600 text-sm mt-1 block">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeEditTamuModal()" class="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-all font-medium">
+                    Batal
+                </button>
+                {{ form_tamu.submit(class="flex-1 bg-teal-700 text-white p-3 rounded-lg hover:bg-teal-800 transition-all font-medium") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+        tab.classList.remove('block');
+    });
+    document.getElementById(tabId).classList.remove('hidden');
+    document.getElementById(tabId).classList.add('block');
+    
+    if (tabId === 'data-undangan') {
+        showSubTab('undangan-detail');
+        document.getElementById('subtab-select').value = 'undangan-detail';
+    }
+}
+
+function showSubTab(subTabId) {
+    document.querySelectorAll('.subtab-content').forEach(subtab => {
+        subtab.classList.add('hidden');
+    });
+    if (document.getElementById(subTabId)) {
+        document.getElementById(subTabId).classList.remove('hidden');
+    }
+}
+
+function showEditTamuModal(tamuId, tamuNama) {
+    const modal = document.getElementById('editTamuModal');
+    const modalContent = document.getElementById('modalContent');
+    const form = document.getElementById('editTamuForm');
+    
+    form.action = `/admin/tamu/edit/${tamuId}`;
+    form.querySelector('input[name="nama"]').value = tamuNama;
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeEditTamuModal() {
+    const modal = document.getElementById('editTamuModal');
+    const modalContent = document.getElementById('modalContent');
+    
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-teal-700 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+        toast.innerText = 'Link berhasil disalin!';
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+    }).catch(err => {
+        alert('Gagal menyalin link: ' + err);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    showTab('{{ default_tab or "tamu" }}');
+    document.documentElement.style.scrollBehavior = 'smooth';
+    document.getElementById('editTamuModal').addEventListener('click', (e) => {
+        if (e.target.id === 'editTamuModal') {
+            closeEditTamuModal();
+        }
+    });
+});
+</script>
+{% endblock %}

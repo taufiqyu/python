@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-8">
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h1 class="text-2xl font-semibold text-teal-800 mb-6 text-center">Katalog Tema</h1>
+
+        <!-- Filter Kategori Dropdown -->
+        <div class="mb-6">
+            <h2 class="text-xl font-medium text-teal-800 mb-4">Filter Kategori</h2>
+            <div class="relative">
+                <label for="category-select" class="block text-sm font-medium text-gray-700 mb-2">Pilih Kategori</label>
+                <select id="category-select" onchange="filterCategory(this.value)" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-500 transition appearance-none bg-white">
+                    <option value="{{ url_for('katalog') }}" {% if not request.args.get('category') %}selected{% endif %}>
+                        <i class="fas fa-th-list mr-2"></i>Semua
+                    </option>
+                    {% for category in categories %}
+                    <option value="{{ url_for('katalog', category=category.id) }}" {% if request.args.get('category')|string == category.id|string %}selected{% endif %}>
+                        <i class="fas fa-folder mr-2"></i>{{ category.name|e }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daftar Tema -->
+        {% if temas %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for tema in temas %}
+            <div class="border rounded-lg p-4 shadow-sm border-gray-200 hover:shadow-md transition">
+                {% if tema.image_url %}
+                <img src="{{ url_for('static', filename=tema.image_url) }}" alt="Gambar tema {{ tema.nama }}" class="w-full h-48 object-cover rounded-md mb-4">
+                {% else %}
+                <div class="w-full h-48 bg-gray-100 flex items-center justify-center rounded-md mb-4">
+                    <span class="text-gray-500">Tidak ada gambar</span>
+                </div>
+                {% endif %}
+                <h3 class="text-lg font-semibold text-teal-800">{{ tema.nama|e }}</h3>
+                <p class="text-gray-600 text-sm">{{ tema.description|e if tema.description else 'Tidak ada deskripsi' }}</p>
+                <p class="text-gray-500 text-sm">Kategori: {{ tema.category.name|e if tema.category else 'Tidak ada kategori' }}</p>
+                <a href="{{ url_for('preview_tema', template_name=tema.template_name) }}" class="mt-3 inline-flex items-center px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition focus:outline-none focus:ring-2 focus:ring-teal-300" title="Pratinjau tema {{ tema.nama }}">
+                    <i class="fas fa-eye mr-2"></i>Pratinjau
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-600">Belum ada tema tersedia.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filterCategory(url) {
+    window.location.href = url;
+}
+</script>
+{% endblock %}

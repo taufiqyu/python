@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-amber-50 font-serif">
+    <!-- Cover Section -->
+    <section class="h-screen flex items-center justify-center bg-cover bg-center" style="background-image: url('https://source.unsplash.com/random/1600x900/?javanese-wedding');">
+        <div class="text-center text-white bg-amber-900 bg-opacity-70 p-8 rounded">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 tracking-wide">{{ undangan.nama_mempelai|e if undangan.nama_mempelai else 'Pernikahan' }}</h1>
+            <p class="text-lg mb-4">Kepada Yth: {{ tamu.nama|e }}</p>
+            <a href="#details" class="bg-amber-600 text-white px-6 py-3 rounded-full hover:bg-amber-700">Lihat Undangan</a>
+        </div>
+    </section>
+
+    <!-- Mempelai Section -->
+    <section id="details" class="py-12 bg-amber-100">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">Mempelai</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="text-center bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-2xl font-semibold text-amber-800">{{ undangan.mempelai_pria|e }}</h3>
+                    <p class="text-gray-700 mt-2">{{ undangan.bio_pria|e if undangan.bio_pria else '-' }}</p>
+                    <p class="text-gray-700">Putra dari: {{ undangan.ayah_pria|e if undangan.ayah_pria else '-' }} & {{ undangan.ibu_pria|e if undangan.ibu_pria else '-' }}</p>
+                    {% if undangan.instagram_pria %}
+                    <p class="mt-2"><a href="{{ undangan.instagram_pria|e }}" target="_blank" class="text-amber-600 hover:underline">Instagram</a></p>
+                    {% endif %}
+                </div>
+                <div class="text-center bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-2xl font-semibold text-amber-800">{{ undangan.mempelai_wanita|e }}</h3>
+                    <p class="text-gray-700 mt-2">{{ undangan.bio_wanita|e if undangan.bio_wanita else '-' }}</p>
+                    <p class="text-gray-700">Putri dari: {{ undangan.ayah_wanita|e if undangan.ayah_wanita else '-' }} & {{ undangan.ibu_wanita|e if undangan.ibu_wanita else '-' }}</p>
+                    {% if undangan.instagram_wanita %}
+                    <p class="mt-2"><a href="{{ undangan.instagram_wanita|e }}" target="_blank" class="text-amber-600 hover:underline">Instagram</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Akad Section -->
+    {% if undangan.tanggal_akad or undangan.tempat_akad %}
+    <section class="py-12 bg-white">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">Akad Nikah</h2>
+            <div class="text-center bg-amber-50 p-6 rounded-lg shadow">
+                <p class="text-lg text-gray-700">{{ undangan.tanggal_akad.strftime('%d %B %Y, %H:%M') if undangan.tanggal_akad else '-' }}</p>
+                <p class="text-lg font-semibold text-amber-800">{{ undangan.tempat_akad|e if undangan.tempat_akad else '-' }}</p>
+                <p class="text-gray-600 mt-2">{{ undangan.lokasi_akad|e|safe if undangan.lokasi_akad else '-' }}</p>
+                {% if undangan.maps_akad %}
+                <a href="{{ undangan.maps_akad|e }}" target="_blank" class="inline-block mt-4 bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700">Lihat di Google Maps</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Resepsi Section -->
+    {% if undangan.tanggal_resepsi or undangan.tempat_resepsi %}
+    <section class="py-12 bg-amber-100">
+        <div class="max-w-4xl mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">Resepsi</h2>
+            <div class="text-center bg-white p-6 rounded-lg shadow">
+                <p class="text-lg text-gray-700">{{ undangan.tanggal_resepsi.strftime('%d %B %Y, %H:%M') if undangan.tanggal_resepsi else '-' }}</p>
+                <p class="text-lg font-semibold text-amber-800">{{ undangan.tempat_resepsi|e if undangan.tempat_resepsi else '-' }}</p>
+                <p class="text-gray-600 mt-2">{{ undangan.lokasi_resepsi|e|safe if undangan.lokasi_resepsi else '-' }}</p>
+                {% if undangan.maps_resepsi %}
+                <a href="{{ undangan.maps_resepsi|e }}" target="_blank" class="inline-block mt-4 bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700">Lihat di Google Maps</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Galeri Section -->
+    {% if galeri_list %}
+    <section class="py-12 bg-amber-50">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">Galeri</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {% for galeri in galeri_list %}
+                <div class="relative">
+                    <img src="{{ galeri.url|e }}" alt="{{ galeri.alt|e if galeri.alt else 'Foto' }}" class="w-full h-64 object-cover rounded-lg shadow">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Cerita Section -->
+    {% if cerita_list %}
+    <section class="py-12 bg-white">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">Kisah Kami</h2>
+            <div class="space-y-8">
+                {% for cerita in cerita_list %}
+                <div class="border-l-4 border-amber-600 pl-4">
+                    <h3 class="text-xl font-semibold text-amber-800">{{ cerita.judul|e }}</h3>
+                    <p class="text-gray-600">{{ cerita.tanggal.strftime('%d %B %Y') if cerita.tanggal else '-' }}</p>
+                    <p class="mt-2 text-gray-700">{{ cerita.isi|e|safe }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Rekening Section -->
+    {% if rekening_list %}
+    <section class="py-12 bg-amber-100">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">Rekening</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for rekening in rekening_list %}
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <p class="font-semibold text-amber-800">{{ rekening.nama_bank|e }}</p>
+                    <p class="text-gray-700">Nomor: {{ rekening.nomer_rekening|e }}</p>
+                    <p class="text-gray-700">Atas Nama: {{ rekening.atas_nama|e }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Kado Section -->
+    {% if undangan.penerima_kado or undangan.alamat_kado or undangan.wa %}
+    <section class="py-12 bg-white">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">Kado</h2>
+            <div class="text-center bg-amber-50 p-6 rounded-lg shadow">
+                <p class="text-lg text-gray-700">Penerima: {{ undangan.penerima_kado|e if undangan.penerima_kado else '-' }}</p>
+                <p class="text-gray-600 mt-2">{{ undangan.alamat_kado|e|safe if undangan.alamat_kado else '-' }}</p>
+                {% if undangan.wa %}
+                <p class="mt-4"><a href="https://wa.me/{{ undangan.wa|e }}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Hubungi via WhatsApp</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- RSVP Section -->
+    <section class="py-12 bg-amber-100">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8 text-amber-900">RSVP</h2>
+            <form method="POST" class="max-w-md mx-auto">
+                {{ form.hidden_tag() }}
+                <div class="mb-4">
+                    {{ form.rsvp_status.label(class="block text-gray-700") }}
+                    {{ form.rsvp_status(class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-amber-600") }}
+                </div>
+                <div class="mb-4">
+                    {{ form.ucapan.label(class="block text-gray-700") }}
+                    {{ form.ucapan(class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-amber-600") }}
+                </div>
+                <button type="submit" class="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 w-full">Kirim RSVP</button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
